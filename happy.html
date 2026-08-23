@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+        }
+
+        /* Starting cake */
+        .cake-start {
+            font-size: 150px;
+            cursor: pointer;
+            animation: bounce-cake 0.8s infinite;
+            user-select: none;
+        }
+
+        @keyframes bounce-cake {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-30px);
+            }
+        }
+
+        .cake-start:hover {
+            filter: brightness(1.2);
+        }
+
+        .cake-start.hidden {
+            display: none;
+        }
+
+        .start-text {
+            color: #FFF;
+            font-size: 24px;
+            margin-top: 30px;
+            opacity: 0.8;
+            display: none;
+        }
+
+        /* Words section */
+        .words-section {
+            margin-bottom: 50px;
+            display: none;
+        }
+
+        .words-section.show {
+            display: block;
+        }
+
+        .word-container {
+            font-size: 80px;
+            font-weight: bold;
+            margin: 40px 0;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Individual letter styles */
+        .letter {
+            display: inline-block;
+            opacity: 0;
+            width: 50px;
+            height: 80px;
+            line-height: 80px;
+        }
+
+        /* Pop animation */
+        @keyframes pop {
+            0% {
+                opacity: 0;
+                transform: scale(0.2) rotate(-30deg);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .letter.animate {
+            animation: pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* Color palette for letters */
+        .letter-1 { color: #FF6B6B; } 
+        .letter-2 { color: #FFE66D; } 
+        .letter-3 { color: #4ECDC4; } 
+        .letter-4 { color: #95E1D3; } 
+        .letter-5 { color: #A8E6CF; } 
+        .letter-6 { color: #FF8B94; } 
+        .letter-7 { color: #FFD3B6; } 
+        .letter-8 { color: #FFAAA5; } 
+        .letter-9 { color: #FF8C42; } 
+        .letter-10 { color: #9D84B7; } 
+        .letter-11 { color: #7FDBCA; } 
+        .letter-12 { color: #F76C5E; } 
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            pointer-events: none;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotateZ(360deg);
+                opacity: 0;
+            }
+        }
+
+        .confetti.fall {
+            animation: confetti-fall 3s ease-in forwards;
+        }
+
+        /* End message */
+        .end-message {
+            display: none;
+            font-size: 150px;
+            font-weight: bold;
+            margin-top: 60px;
+            opacity: 0;
+            animation: pop 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .end-message.show {
+            display: block;
+        }
+
+        .end-message:hover {
+            filter: brightness(1.2);
+        }
+
+        .end-message {
+            animation: pop 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards, bounce-cake 0.8s 0.8s infinite;
+        }
+
+        .end-message.show {
+            animation: pop 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards, bounce-cake 0.8s 0.8s infinite;
+        }
+
+        .restart-text {
+            color: #AAA;
+            font-size: 20px;
+            margin-top: 30px;
+            opacity: 0.8;
+            cursor: pointer;
+            display: none;
+        }
+
+        .restart-text:hover {
+            color: #FFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Starting cake -->
+        <div class="cake-start" id="cakeStart">🎂</div>
+        <div class="start-text">Click the cake to start!</div>
+
+        <!-- Words animation section -->
+        <div class="words-section" id="wordsSection">
+            <div class="word-container" id="happyContainer"></div>
+            <div class="word-container" id="birthdayContainer"></div>
+            <div class="word-container" id="toContainer"></div>
+            <div class="word-container" id="youContainer"></div>
+        </div>
+
+        <!-- End message -->
+        <div class="end-message" id="endMessage">🎂</div>
+        <div class="restart-text" id="restartText">Click cake to restart</div>
+    </div>
+
+    <script>
+        const words = [
+            { text: 'HAPPY', containerId: 'happyContainer' },
+            { text: 'BIRTHDAY', containerId: 'birthdayContainer' },
+            { text: 'TO', containerId: 'toContainer' },
+            { text: 'YOU', containerId: 'youContainer' }
+        ];
+
+        const LETTER_DELAY = 200; // Delay between each letter
+        const LETTER_ANIMATION = 500; // Duration of pop animation
+        const WORD_STAY_TIME = 1000; // 1 second stay time
+        const colors = ['letter-1', 'letter-2', 'letter-3', 'letter-4', 'letter-5', 'letter-6', 
+                       'letter-7', 'letter-8', 'letter-9', 'letter-10', 'letter-11', 'letter-12'];
+
+        let letterIndex = 0;
+
+        function createLetterElement(char, colorClass) {
+            const letter = document.createElement('span');
+            letter.className = `letter ${colorClass}`;
+            letter.textContent = char;
+            return letter;
+        }
+
+        function animateLetter(container, char, colorClass, delay) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const letterElement = createLetterElement(char, colorClass);
+                    container.appendChild(letterElement);
+                    
+                    // Trigger animation
+                    setTimeout(() => {
+                        letterElement.classList.add('animate');
+                    }, 10);
+
+                    resolve();
+                }, delay);
+            });
+        }
+
+        async function animateWord(wordObj) {
+            const container = document.getElementById(wordObj.containerId);
+            container.innerHTML = ''; // Clear container
+
+            for (let i = 0; i < wordObj.text.length; i++) {
+                const char = wordObj.text[i];
+                const colorClass = colors[letterIndex % colors.length];
+                
+                await animateLetter(container, char, colorClass, i * LETTER_DELAY);
+                letterIndex++;
+            }
+
+            // Wait for all letters to animate + 1 second stay time
+            await new Promise(resolve => 
+                setTimeout(resolve, LETTER_ANIMATION + WORD_STAY_TIME)
+            );
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '0px';
+                confetti.style.background = ['#FFD700', '#FF6B6B', '#4ECDC4', '#95E1D3', '#FFE66D', '#FF8B94'][Math.floor(Math.random() * 6)];
+                
+                document.body.appendChild(confetti);
+
+                setTimeout(() => {
+                    confetti.classList.add('fall');
+                }, 10);
+
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+        async function startAnimation() {
+            // Hide start cake and text
+            document.getElementById('cakeStart').classList.add('hidden');
+
+            // Show words section
+            const wordsSection = document.getElementById('wordsSection');
+            wordsSection.classList.add('show');
+
+            // Animate each word
+            for (const wordObj of words) {
+                await animateWord(wordObj);
+            }
+
+            // Show end message and confetti
+            const endMessage = document.getElementById('endMessage');
+            endMessage.classList.add('show');
+            createConfetti();
+        }
+
+        function resetAnimation() {
+            location.reload();
+        }
+
+        // Start cake click handler
+        document.getElementById('cakeStart').addEventListener('click', startAnimation);
+
+        // Restart text click handler
+        document.getElementById('restartText').addEventListener('click', resetAnimation);
+
+        // End message cake click handler
+        document.getElementById('endMessage').addEventListener('click', resetAnimation);
+    </script>
+</body>
+</html>
